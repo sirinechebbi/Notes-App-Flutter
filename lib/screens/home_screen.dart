@@ -1,84 +1,30 @@
 import 'package:flutter/material.dart';
-class HomeScreen extends StatelessWidget{
-  const HomeScreen({Key? key}) : super(key: key);
+import 'package:go_router/go_router.dart';
+
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
-      body: Column(
-        children:[
-          Container(
-            height:100,
-            color: Colors.blue,
-            padding: EdgeInsets.only(
-              bottom: 15,
-              left:20,
-              right:20,
+      appBar: AppBar(title: const Text('Notes App')),
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          spacing: 12,
+          children: [
+            Text('Notes App', style: textTheme.headlineLarge),
+            const Text('Flutter + go_router'),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: () => context.go('/notes'),
+              child: const Text('Open my notes →'),
             ),
-            alignment:Alignment.bottomLeft,
-            child: Text('Notes App',
-            style: TextStyle(
-              color:Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.all(20),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Welcome to Notes App ',
-                    style:TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign:TextAlign.center,
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    'Keep your ideas , lists, and remindres in one place',
-                    style:TextStyle(
-                      fontSize: 18,
-                      color:Color(0xFF7F8C8D),
-                    ),
-                    textAlign:TextAlign.center,
-                  ),
-                  SizedBox(height:40),
-                  ElevatedButton(
-                    onPressed:(){
-                      Navigator.pushNamed(context, '/notes');
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.pink,
-                      padding: EdgeInsets.symmetric(vertical: 12,
-                        horizontal: 30,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-
-                  ),
-                  child:Text(
-                    'Go to notes ',
-                    style:
-                      TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight:FontWeight.bold,
-                      ),
-                  ),
-            ),
-                ],
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
-
-
     );
   }
 }

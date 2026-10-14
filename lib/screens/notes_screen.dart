@@ -1,177 +1,72 @@
 import 'package:flutter/material.dart';
-import '../components/note_item.dart';
-import '../components/NoteInputDialog.dart';
+
+import '../models/note.dart';
+import '../widgets/NoteInputDialog.dart';
+import '../widgets/note_item.dart';
 
 class NotesScreen extends StatefulWidget {
+  const NotesScreen({super.key});
+
   @override
-  _NotesScreenState createState() => _NotesScreenState();
+  State<NotesScreen> createState() => _NotesScreenState();
 }
 
 class _NotesScreenState extends State<NotesScreen> {
-  // Sample initial notes data
-  List<Map<String, dynamic>> notes = [
-    {
-      'id': '1',
-      'content': 'Learn Flutter',
-      'createdAt': DateTime.now().toIso8601String(),
-    },
-    {
-      'id': '2',
-      'content': 'Complete the tutorial',
-      'createdAt': DateTime.now().toIso8601String(),
-    },
+  final List<Note> _notes = [
+    const Note(id: '1', title: 'Welcome', content: 'Tap + to add a note.'),
+    const Note(id: '2', title: 'Shopping', content: 'Milk, bread, coffee.'),
   ];
 
-  // Controllers and state variables
-  TextEditingController noteController = TextEditingController();
-  Map<String, dynamic>? editingNote;
-
-  // Function to save a new or updated note
-  void saveNote() {
-    if (noteController.text.trim().isEmpty) return;
-
+  Future<void> _add() async {
+    final draft = await showNoteInputDialog(context);
+    if (draft == null) return;
     setState(() {
-      if (editingNote != null) {
-        // Update existing note
-        for (int i = 0; i < notes.length; i++) {
-          if (notes[i]['id'] == editingNote!['id']) {
-            notes[i] = {
-              ...notes[i],
-              'content': noteController.text,
-              'updatedAt': DateTime.now().toIso8601String(),
-            };
-            break;
-          }
-        }
-        editingNote = null;
-      } else {
-        // Add new note
-        final newNote = {
-          'id': DateTime.now().millisecondsSinceEpoch.toString(),
-          'content': noteController.text,
-          'createdAt': DateTime.now().toIso8601String(),
-        };
-        notes.insert(0, newNote);
-      }
-    });
-
-    noteController.clear();
-  }
-
-  // Function to delete a note
-  void deleteNote(String id) {
-    setState(() {
-      notes.removeWhere((note) => note['id'] == id);
+      _notes.insert(
+        0,
+        Note(
+          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          title: draft.title,
+          content: draft.content,
+        ),
+      );
     });
   }
 
-  // Function to open edit mode
-  void editNote(Map<String, dynamic> note) {
-    editingNote = note;
-    noteController.text = note['content'];
-    showNoteDialog();
+  Future<void> _edit(Note note) async {
+    final draft = await showNoteInputDialog(context, initial: note);
+    if (draft == null) return;
+    setState(() {
+      final index = _notes.indexWhere((n) => n.id == note.id);
+      _notes[index] = note.copyWith(title: draft.title, content: draft.content);
+    });
   }
 
-  // Show dialog for adding/editing notes
-  void showNoteDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => NoteInputDialog(
-        controller: noteController,
-        isEditing: editingNote != null,
-        onSave: saveNote,
-      ),
-    );
-  }
+  void _delete(String id) => setState(() => _notes.removeWhere((n) => n.id == id));
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          // Header with title and add button
-          Container(
-            height: 100,
-            color: Colors.blue,
-            padding: EdgeInsets.only(
-              bottom: 15,
-              left: 20,
-              right: 20,
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'My Notes',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                InkWell(
-                  onTap: () {
-                    editingNote = null;
-                    noteController.clear();
-                    showNoteDialog();
-                  },
-                  child: Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Center(
-                      child: Text(
-                        '+',
-                        style: TextStyle(
-                          fontSize: 24,
-                          color: Colors.blue,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Notes list or empty state
-          Expanded(
-            child: notes.isNotEmpty
-                ? ListView.builder(
-              padding: EdgeInsets.all(15),
-              itemCount: notes.length,
+      appBar: AppBar(title: const Text('My Notes')),
+      body: _notes.isEmpty
+          ? const Center(child: Text('No notes yet.'))
+          : ListView.builder(
+              padding: const EdgeInsets.all(8),
+              itemCount: _notes.length,
               itemBuilder: (context, index) {
+                final note = _notes[index];
                 return NoteItem(
-                  note: notes[index],
-                  onEdit: editNote,
-                  onDelete: deleteNote,
+                  key: ValueKey(note.id),
+                  note: note,
+                  onEdit: () => _edit(note),
+                  onDelete: () => _delete(note.id),
                 );
               },
-            )
-                : Center(
-              child: Text(
-                'No notes yet. Create one!',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.purpleAccent,
-                ),
-              ),
             ),
-          ),
-        ],
+      floatingActionButton: FloatingActionButton(
+        onPressed: _add,
+        tooltip: 'Add note',
+        child: const Icon(Icons.add),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    // Clean up the controller when the widget is disposed
-    noteController.dispose();
-    super.dispose();
   }
 }
